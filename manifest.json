@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PDF Tools",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Adds circular floating buttons. Click extension icon to adjust position.",
   "action": {
     "default_popup": "popup.html",
