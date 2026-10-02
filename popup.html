@@ -1,19 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <title>PDF Tools</title>
     <style>
-        body { width: 200px; padding: 10px; font-family: sans-serif; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; }
-        .value-display { text-align: center; margin-top: 5px; color: #555; }
-        button { width: 100%; margin-top: 10px; padding: 5px; cursor: pointer; }
+        :root {
+            --bg: #202124; --panel: #2a2b2f; --line: #3c4043;
+            --text: #e8eaed; --muted: #a8adb3;
+            --accent: #ef5b4f; --accent-soft: rgba(239, 91, 79, .16);
+        }
+        * { box-sizing: border-box; margin: 0; }
+        html { color-scheme: dark; }
+        body { width: 296px; background: var(--bg); color: var(--text); font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        :focus-visible { outline: 2px solid #8ab4f8; outline-offset: 2px; }
+
+        header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; border-bottom: 1px solid var(--line); }
+        header img { width: 28px; height: 28px; border-radius: 6px; }
+        h1 { font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; }
+        .ver { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+        section { padding: 14px 16px; }
+        section + section { border-top: 1px solid var(--line); }
+        h2 { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+
+        .row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+        .row label { font-weight: 500; }
+        .row output { color: var(--muted); font-variant-numeric: tabular-nums; }
+        .row output b { color: var(--text); font-weight: 600; }
+        input[type=range] { display: block; width: 100%; height: 20px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+        .under { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+        button { height: 26px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; font-size: 12px; cursor: pointer; transition: background-color .15s, border-color .15s; }
+        button:hover:not(:disabled) { background: var(--panel); border-color: #5f6368; }
+        button:disabled { color: #80868b; cursor: default; }
+
+        ul { list-style: none; padding: 0; display: grid; gap: 9px; }
+        li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; }
+        li span { width: 28px; height: 28px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; }
+        li svg { width: 16px; height: 16px; fill: var(--text); }
+        li b { display: block; font-weight: 500; }
+        li small { display: block; font-size: 12px; color: var(--muted); }
+
+        .note { font-size: 12px; color: var(--muted); }
+        .note b { color: var(--text); font-weight: 500; }
     </style>
 </head>
 <body>
-    <label>Button Position (Right)</label>
-    <input type="range" id="positionSlider" min="0" max="500" value="130">
-    <div class="value-display"><span id="valDisplay">130</span>px</div>
-    
+    <header>
+        <img src="icons/icon48.png" alt="">
+        <h1>PDF Tools</h1>
+        <span class="ver" id="version"></span>
+    </header>
+
+    <section>
+        <div class="row">
+            <label for="positionSlider">Button position</label>
+            <output for="positionSlider"><b id="valDisplay">170</b> px from the right</output>
+        </div>
+        <input type="range" id="positionSlider" min="0" max="500" value="170">
+        <div class="under">
+            <span>Slide to move the buttons on the open PDF.</span>
+            <button type="button" id="resetBtn">Reset</button>
+        </div>
+    </section>
+
+    <section>
+        <h2>The buttons on a PDF</h2>
+        <ul>
+            <li><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg></span><div><b>Toolbar</b><small>Hides or shows the viewer's toolbar and sidebar</small></div></li>
+            <li><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg></span><div><b>Dark</b><small>White text on a black page</small></div></li>
+            <li><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg></span><div><b>Sepia</b><small>A warm tint for long reading</small></div></li>
+            <li><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></span><div><b>Fullscreen</b><small>The buttons hide until you leave it</small></div></li>
+        </ul>
+    </section>
+
+    <section>
+        <p class="note">For PDFs saved on your computer, turn on <b>Allow access to file URLs</b> in this extension's details.</p>
+    </section>
+
     <script src="popup.js"></script>
 </body>
 </html>

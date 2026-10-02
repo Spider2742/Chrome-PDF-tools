@@ -1,14 +1,15 @@
 # 📄 Chrome-PDF-Tools
 
-![Version](https://img.shields.io/badge/version-1.1-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Version](https://img.shields.io/badge/version-1.2-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 **Chrome-PDF-Tools** is a lightweight extension for Chromium-based browsers (Brave, Chrome, Edge) that gives you full control over the native PDF viewer. It adds a non-intrusive floating menu to toggle the toolbar, switch color modes, and enter fullscreen—perfect for distraction-free reading.
 
 ## ✨ Features
 
 * **👁️ Toggle UI:** Instantly hide the PDF sidebar and header to maximize screen space.
-* **🌙 Dark Mode:** High-contrast smart inversion (pitch black background, white text) that keeps images and diagrams looking normal.
+* **🌙 Dark Mode:** High-contrast inversion (pitch black page, white text) that keeps colours close to their original hue. The viewer's own toolbar is left alone.
 * **☕ Sepia Mode:** A warm, yellowish tint for comfortable reading and reduced eye strain.
+* **🔁 Keeps Your Mode:** Dark or Sepia stays on in that tab when you show or hide the toolbar.
 * **⛶ Fullscreen Mode:** A dedicated button to enter F11 fullscreen mode directly.
 * **👻 Auto-Hide:** Controls automatically vanish when you enter fullscreen for a completely clean view.
 * **↔️ Custom Positioning:** Click the extension icon to slide the buttons left or right to fit your screen perfectly.
@@ -68,12 +69,12 @@ If you want to use this tool on PDF files stored on your computer (e.g., `file:/
 
 ## 🛠️ Usage
 1.  Open any PDF file in your browser.
-2.  Look for the floating icons in the top-right corner.
-3.  **Click the Eye** to toggle the toolbar (the page will refresh).
+2.  Look for the four extra icons at the top right, next to the viewer's own buttons.
+3.  **Click the Eye** to hide or show the toolbar (the page will refresh).
 4.  **Click the Moon** to toggle High-Contrast Dark Mode.
 5.  **Click the Coffee Cup** to toggle Sepia Mode.
 6.  **Click the Corners** to toggle fullscreen.
-7.  **Click the Extension Icon** (puzzle piece) in your browser toolbar to adjust the horizontal position of the buttons.
+7.  **Click the Extension Icon** (puzzle piece) in your browser toolbar to adjust the horizontal position of the buttons, or reset it.
 
 ---
 
