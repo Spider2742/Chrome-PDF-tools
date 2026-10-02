@@ -7,7 +7,7 @@
 ## ✨ Features
 
 * **👁️ Toggle UI:** Instantly hide the PDF sidebar and header to maximize screen space.
-* **🌙 Dark Mode:** High-contrast inversion (pitch black page, white text) that keeps colours close to their original hue. The viewer's own toolbar is left alone.
+* **🌙 Dark Mode:** High-contrast inversion (pitch black page, white text) that keeps colours close to their original hue. Only the page changes: the viewer's toolbar, sidebar and background stay as they are.
 * **☕ Sepia Mode:** A warm, yellowish tint for comfortable reading and reduced eye strain.
 * **🔁 Keeps Your Mode:** Dark or Sepia stays on in that tab when you show or hide the toolbar.
 * **⛶ Fullscreen Mode:** A dedicated button to enter F11 fullscreen mode directly.

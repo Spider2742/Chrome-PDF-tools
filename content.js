@@ -9,7 +9,82 @@
 
     const isToolbarHidden = () => window.location.href.includes('#toolbar=0');
 
-    // --- 1. CSS STYLES ---
+    // --- 1. PAGE-ONLY FILTERS ---
+    // A content script can't see where the pages are: the viewer is a separate, closed frame.
+    // What it can do is recognise the viewer's own background by its colour. These SVG filters
+    // apply a reading mode to everything except that background (and the soft shadow and thin
+    // lines the viewer draws on it), so the page changes and the viewer around it doesn't.
+    // In a viewer with a different background colour nothing matches, and the whole area below
+    // the toolbar gets the mode, as in earlier versions.
+    const VIEWER_BG = [42, 48];      // channel range of the viewer's dark grey background
+    const VIEWER_SHADOW = [32, 43];  // the shadow it draws around each page, darker than the background
+
+    const range = ([lo, hi]) => Array.from({ length: 256 }, (_, i) => (i >= lo && i <= hi ? 1 : 0)).join(' ');
+    const matches = (name, r) => `
+        <feComponentTransfer in="SourceGraphic" result="${name}-c">
+            <feFuncR type="discrete" tableValues="${range(r)}"/>
+            <feFuncG type="discrete" tableValues="${range(r)}"/>
+            <feFuncB type="discrete" tableValues="${range(r)}"/>
+        </feComponentTransfer>
+        <feColorMatrix in="${name}-c" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 1 1 0 -2" result="${name}"/>`;
+
+    // "keep" ends up opaque wherever the viewer's own surface is, and clear over the pages.
+    const keepMask = `
+        ${matches('bg', VIEWER_BG)}
+        ${matches('shadow', VIEWER_SHADOW)}
+        <!-- drop stray matches: single pixels on the soft edges of letters can land on the same grey -->
+        <feMorphology in="bg" operator="erode" radius="1" result="bg-shrunk"/>
+        <feMorphology in="bg-shrunk" operator="dilate" radius="1" result="bg-solid"/>
+        <!-- close small gaps, so thin lines and labels drawn on the background count as background -->
+        <feMorphology in="bg-solid" operator="dilate" radius="3" result="bg-grown"/>
+        <feMorphology in="bg-grown" operator="erode" radius="3" result="bg-closed"/>
+        <!-- a long horizontal run of background also counts, however thin: the sliver between
+             the top of the window and the first page is only a pixel or two tall -->
+        <feMorphology in="bg" operator="erode" radius="40 0" result="bg-run"/>
+        <feMorphology in="bg-run" operator="dilate" radius="40 0" result="bg-long"/>
+        <!-- shadow-coloured pixels only count right next to the background, never inside a page -->
+        <feMerge result="surface"><feMergeNode in="bg-solid"/><feMergeNode in="bg-long"/></feMerge>
+        <feMorphology in="surface" operator="dilate" radius="7" result="surface-near"/>
+        <feComposite in="shadow" in2="surface-near" operator="in" result="shadow-kept"/>
+        <feMerge result="keep"><feMergeNode in="surface"/><feMergeNode in="bg-closed"/><feMergeNode in="shadow-kept"/></feMerge>`;
+
+    const pageOnly = (id, effect) => `
+        <filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+            ${keepMask}
+            ${effect}
+            <feComposite in="SourceGraphic" in2="keep" operator="in" result="untouched"/>
+            <feComposite in="effect" in2="keep" operator="out" result="changed"/>
+            <feMerge><feMergeNode in="changed"/><feMergeNode in="untouched"/></feMerge>
+        </filter>`;
+
+    const perChannel = (inName, slope, intercept, result) => `
+        <feComponentTransfer in="${inName}" result="${result}">
+            <feFuncR type="linear" slope="${slope}" intercept="${intercept}"/>
+            <feFuncG type="linear" slope="${slope}" intercept="${intercept}"/>
+            <feFuncB type="linear" slope="${slope}" intercept="${intercept}"/>
+        </feComponentTransfer>`;
+
+    // Same recipes as the CSS fallbacks below, written as filter primitives.
+    // invert(1) hue-rotate(180deg) contrast(1.2) grayscale(0.3)
+    const darkEffect = `
+        <feColorMatrix in="SourceGraphic" type="matrix" values="-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0" result="d1"/>
+        <feColorMatrix in="d1" type="hueRotate" values="180" result="d2"/>
+        ${perChannel('d2', 1.2, -0.1, 'd3')}
+        <feColorMatrix in="d3" type="saturate" values="0.7" result="effect"/>`;
+    // sepia(0.4) contrast(0.95) brightness(0.95), with a light cream wash
+    const sepiaEffect = `
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0.7572 0.3076 0.0756 0 0  0.1396 0.8744 0.0672 0 0  0.1088 0.2136 0.6524 0 0  0 0 0 1 0" result="s1"/>
+        ${perChannel('s1', 0.9025, 0.02375, 's2')}
+        <feFlood flood-color="rgb(244, 236, 216)" flood-opacity="0.14" result="wash"/>
+        <feMerge result="effect"><feMergeNode in="s2"/><feMergeNode in="wash"/></feMerge>`;
+
+    const filters = document.createElement('div');
+    filters.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+        ${pageOnly('pdf-tools-dark', darkEffect)}
+        ${pageOnly('pdf-tools-sepia', sepiaEffect)}
+    </svg>`;
+
+    // --- 2. CSS STYLES ---
     // The reading modes are drawn by a layer over the document instead of a filter on the
     // whole page, so the viewer's toolbar and these buttons keep their normal look.
     const style = document.createElement('style');
@@ -26,14 +101,16 @@
             /* contrast(1.2) crushes dark greys into black; hue-rotate keeps colours near their own hue */
             -webkit-backdrop-filter: invert(1) hue-rotate(180deg) contrast(1.2) grayscale(0.3);
             backdrop-filter: invert(1) hue-rotate(180deg) contrast(1.2) grayscale(0.3);
+            /* where the browser allows it, the page-only version replaces the line above */
+            backdrop-filter: url(#pdf-tools-dark);
         }
 
         /* SEPIA MODE */
         #pdf-tools-shade.sepia {
             display: block;
-            background: rgba(244, 236, 216, 0.14);
             -webkit-backdrop-filter: sepia(0.4) contrast(0.95) brightness(0.95);
             backdrop-filter: sepia(0.4) contrast(0.95) brightness(0.95);
+            backdrop-filter: url(#pdf-tools-sepia);
         }
 
         #pdf-tools-container {
@@ -142,7 +219,7 @@
     const sepiaBtn = createButton(coffeeIcon, "Sepia mode", toggleSepia);
     const fsBtn = createButton(fsIcon, "Fullscreen", toggleFullscreen);
     container.append(toolbarBtn, darkBtn, sepiaBtn, fsBtn);
-    document.body.append(shade, container);
+    document.body.append(filters.firstElementChild, shade, container);
 
     let savedMode = '';
     try { savedMode = sessionStorage.getItem(MODE_KEY) || ''; } catch (_) {}
